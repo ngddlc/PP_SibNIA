@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>АРМ Оператора | СибНИА</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-slate-100 text-slate-800 min-h-screen flex flex-col">
+
+    <nav class="bg-emerald-800 text-white shadow-md px-6 py-3 flex justify-between items-center">
+        <div class="font-bold text-lg flex items-center gap-2">
+            СибНИА | Журнал ввода экспериментальных данных
+        </div>
+        <a href="/logout" class="text-xs bg-rose-700 hover:bg-rose-600 px-3 py-1.5 rounded transition">Выйти</a>
+    </nav>
+
+    <div class="p-4 grid grid-cols-1 xl:grid-cols-4 gap-4 items-start">
+        
+        <div class="bg-white p-4 rounded-xl shadow-sm border space-y-4">
+            <h3 class="font-bold text-slate-700 border-b pb-1 text-sm">1. Рабочие смены</h3>
+            <form action="/brigadier/shifts/create" method="POST" class="space-y-2 bg-slate-50 p-3 rounded border text-xs">
+                <div>
+                    <label class="block text-slate-500">Выберите Эксперимент (Работу)</label>
+                    <select name="experiment_id" required class="w-full p-1.5 border rounded bg-white">
+                        {{ range .Experiments }}<option value="{{ .ID }}">{{ .ExperimentNumber }} - {{ .ExperimentName }}</option>{{ end }}
+                    </select>
+                </div>
+                <div class="grid grid-cols-2 gap-2">
+                    <div>
+                        <label class="block text-slate-500">№ Смены</label>
+                        <input type="number" name="shift_number" required class="w-full p-1.5 border rounded">
+                    </div>
+                    <div>
+                        <label class="block text-slate-500">Дата</label>
+                        <input type="date" name="shift_date" class="w-full p-1.5 border rounded">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-slate-500">Описание работ</label>
+                    <input type="text" name="work_description" required class="w-full p-1.5 border rounded" placeholder="Продувка на крейсерских режимах">
+                </div>
+                <button type="submit" class="w-full bg-emerald-600 text-white py-1 rounded font-bold">Открыть смену</button>
+            </form>
+
+            <div class="space-y-1 max-h-40 overflow-y-auto">
+                {{ range .Shifts }}
+                <a href="/brigadier?shift_id={{ .ID }}" class="block p-2 rounded text-xs border {{ if eq .ID $.ActiveShiftID }}bg-emerald-50 border-emerald-500 font-bold{{ else }}bg-white{{ end }}">
+                    Смена №{{ .ShiftNumber }} (Эксперимент ID: {{ .ExperimentID }})
+                </a>
+                {{ end }}
+            </div>
+        </div>
+
+        <div class="bg-white p-4 rounded-xl shadow-sm border space-y-4">
+            <h3 class="font-bold text-slate-700 border-b pb-1 text-sm">2. Конфигурации испытаний</h3>
+            {{ if .ActiveShiftID }}
+            <form action="/brigadier/configs/create" method="POST" class="space-y-2 bg-slate-50 p-3 rounded border text-xs">
+                <input type="hidden" name="shift_id" value="{{ .ActiveShiftID }}">
+                <div>
+                    <label class="block text-slate-500">Описание конфигурации</label>
+                    <input type="text" name="description" required class="w-full p-1.5 border rounded" placeholder="Крыло с выпущенной механизацией">
+                </div>
+                <div class="grid grid-cols-3 gap-1">
+                    <div>
+                        <label class="block text-slate-500">V (Скорость)</label>
+                        <input type="number" step="0.1" name="wind_speed" required class="w-full p-1 border rounded">
+                    </div>
+                    <div>
+                        <label class="block text-slate-500">Крен (Roll)</label>
+                        <input type="number" step="0.1" name="roll_angle" required class="w-full p-1 border rounded">
+                    </div>
+                    <div>
+                        <label class="block text-slate-500">Рыскание(Yaw)</label>
+                        <input type="number" step="0.1" name="yaw_angle" required class="w-full p-1 border rounded">
+                    </div>
+                </div>
+                <button type="submit" class="w-full bg-indigo-600 text-white py-1 rounded font-bold">Создать конфиг</button>
+            </form>
+            <div class="space-y-1">
+                {{ range .Configs }}
+                <a href="/brigadier?shift_id={{ $.ActiveShiftID }}&config_id={{ .ID }}" class="block p-2 rounded text-xs border {{ if eq .ID $.ActiveConfigID }}bg-indigo-50 border-indigo-400 font-bold{{ else }}bg-white{{ end }}">
+                    {{ .Description }} (V={{ .WindSpeed }} м/с)
+                </a>
+                {{ end }}
+            </div>
+            {{ else }}<p class="text-xs text-slate-400 italic">Сначала выберите смену</p>{{ end }}
+        </div>
+
+        <div class="bg-white p-4 rounded-xl shadow-sm border space-y-4">
+            <h3 class="font-bold text-slate-700 border-b pb-1 text-sm">3. Протоколы</h3>
+            {{ if .ActiveConfigID }}
+            <form action="/brigadier/protocols/create" method="POST" class="space-y-2 bg-slate-50 p-3 rounded border text-xs">
+                <input type="hidden" name="shift_id" value="{{ .ActiveShiftID }}">
+                <input type="hidden" name="configuration_id" value="{{ .ActiveConfigID }}">
+                <div>
+                    <label class="block text-slate-500">Номер протокола</label>
+                    <input type="text" name="protocol_number" required class="w-full p-1.5 border rounded" placeholder="Пр-104/26">
+                </div>
+                <div>
+                    <label class="block text-slate-500">Переменный параметр</label>
+                    <input type="text" name="variable_parameter" required class="w-full p-1.5 border rounded" placeholder="Угол атаки Alpha">
+                </div>
+                <button type="submit" class="w-full bg-amber-600 text-white py-1 rounded font-bold">Создать протокол</button>
+            </form>
+            <div class="space-y-1">
+                {{ range .Protocols }}
+                <a href="/brigadier?shift_id={{ $.ActiveShiftID }}&config_id={{ $.ActiveConfigID }}&protocol_id={{ .ID }}" class="block p-2 rounded text-xs border {{ if eq .ID $.ActiveProtocolID }}bg-amber-50 border-amber-400 font-bold{{ else }}bg-white{{ end }}">
+                    № {{ .ProtocolNumber }} ({{ .VariableParameter }})
+                </a>
+                {{ end }}
+            </div>
+            {{ else }}<p class="text-xs text-slate-400 italic">Сначала выберите конфигурацию</p>{{ end }}
+        </div>
+
+        <div class="bg-white p-4 rounded-xl shadow-sm border space-y-4 xl:col-span-4">
+            <h3 class="font-bold text-slate-700 border-b pb-1 text-sm">4. Пошаговые измерения (Данные протокола)</h3>
+            {{ if .ActiveProtocolID }}
+            
+            <form action="/brigadier/points/add" method="POST" class="bg-slate-50 p-4 rounded-lg border space-y-3 text-xs font-medium">
+                <input type="hidden" name="shift_id" value="{{ .ActiveShiftID }}">
+                <input type="hidden" name="config_id" value="{{ .ActiveConfigID }}">
+                <input type="hidden" name="protocol_id" value="{{ .ActiveProtocolID }}">
+                
+                <div class="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-7 gap-2.5">
+                    <div>
+                        <label class="text-slate-500 block mb-0.5">Точка №</label>
+                        <input type="text" name="point_n" required class="w-full p-1 border rounded font-mono">
+                    </div>
+                    <div>
+                        <label class="text-slate-500 block mb-0.5">Параметр al</label>
+                        <input type="number" step="0.0001" name="al" class="w-full p-1 border rounded font-mono">
+                    </div>
+                    <div>
+                        <label class="text-slate-500 block mb-0.5">Alpha (α), °</label>
+                        <input type="number" step="0.001" name="alpha" required class="w-full p-1 border rounded font-mono">
+                    </div>
+                    <div>
+                        <label class="text-slate-500 block mb-0.5">Beta (β), °</label>
+                        <input type="number" step="0.001" name="beta" required class="w-full p-1 border rounded font-mono">
+                    </div>
+
+                    <div>
+                        <label class="text-slate-500 block mb-0.5">V (Скорость)</label>
+                        <input type="number" step="0.001" name="v" required class="w-full p-1 border rounded font-mono">
+                    </div>
+                    <div>
+                        <label class="text-slate-500 block mb-0.5">Q (Скор. напор)</label>
+                        <input type="number" step="0.001" name="q" required class="w-full p-1 border rounded font-mono">
+                    </div>
+                    <div>
+                        <label class="text-slate-500 block mb-0.5">Давление Pf</label>
+                        <input type="number" step="0.001" name="pf" class="w-full p-1 border rounded font-mono">
+                    </div>
+                    <div>
+                        <label class="text-slate-500 block mb-0.5">Давление Pa</label>
+                        <input type="number" step="0.001" name="pa" class="w-full p-1 border rounded font-mono">
+                    </div>
+                    <div>
+                        <label class="text-slate-500 block mb-0.5">Температура Tf</label>
+                        <input type="number" step="0.01" name="tf" class="w-full p-1 border rounded font-mono">
+                    </div>
+
+                    <div>
+                        <label class="text-slate-600 block mb-0.5 font-semibold text-rose-700">Сила X (Н)</label>
+                        <input type="number" step="0.0001" name="x" required class="w-full p-1 border border-rose-200 rounded font-mono bg-rose-50/30">
+                    </div>
+                    <div>
+                        <label class="text-slate-600 block mb-0.5 font-semibold text-emerald-700">Сила Y (Н)</label>
+                        <input type="number" step="0.0001" name="y" required class="w-full p-1 border border-emerald-200 rounded font-mono bg-emerald-50/30">
+                    </div>
+                    <div>
+                        <label class="text-slate-600 block mb-0.5 font-semibold text-amber-700">Сила Z (Н)</label>
+                        <input type="number" step="0.0001" name="z" required class="w-full p-1 border border-amber-200 rounded font-mono bg-amber-50/30">
+                    </div>
+
+                    <div>
+                        <label class="text-slate-500 block mb-0.5">Момент Mx</label>
+                        <input type="number" step="0.0001" name="mx" class="w-full p-1 border rounded font-mono">
+                    </div>
+                    <div>
+                        <label class="text-slate-500 block mb-0.5">Момент My</label>
+                        <input type="number" step="0.0001" name="my" class="w-full p-1 border rounded font-mono">
+                    </div>
+                    <div>
+                        <label class="text-slate-500 block mb-0.5">Момент Mz</label>
+                        <input type="number" step="0.0001" name="mz" class="w-full p-1 border rounded font-mono">
+                    </div>
+                </div>
+
+                <div class="flex justify-end pt-1">
+                    <button type="submit" class="bg-emerald-700 text-white px-5 py-2 rounded-md font-bold hover:bg-emerald-800 transition shadow-sm">
+                        ➕ Внести точку в протокол смены
+                    </button>
+                </div>
+            </form>
+
+            <div class="border rounded-lg overflow-x-auto mt-4 shadow-inner">
+                <table class="w-full text-left text-xs font-mono min-w-[1200px]">
+                    <thead class="bg-slate-100 text-slate-600 border-b">
+                        <tr>
+                            <th class="p-2 text-center sticky left-0 bg-slate-100 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)]">Точка</th>
+                            <th class="p-2">al</th>
+                            <th class="p-2">Alpha (α)</th>
+                            <th class="p-2">Beta (β)</th>
+                            <th class="p-2">V (м/с)</th>
+                            <th class="p-2">Q (Па)</th>
+                            <th class="p-2">Pf</th>
+                            <th class="p-2">Pa</th>
+                            <th class="p-2">Tf (°C)</th>
+                            <th class="p-2 text-rose-800 bg-rose-50/30">X (Н)</th>
+                            <th class="p-2 text-emerald-800 bg-emerald-50/30">Y (Н)</th>
+                            <th class="p-2 text-amber-800 bg-amber-50/30">Z (Н)</th>
+                            <th class="p-2">Mx</th>
+                            <th class="p-2">My</th>
+                            <th class="p-2">Mz</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y bg-white">
+                        {{ range .Points }}
+                        <tr class="hover:bg-slate-50 transition-colors">
+                            <td class="p-2 text-center font-bold text-slate-600 bg-slate-100 sticky left-0 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)]">{{ .PointN }}</td>
+                            <td class="p-2 text-slate-500">{{ .Al }}</td>
+                            <td class="p-2 text-slate-900 font-bold">{{ .Alpha }}°</td>
+                            <td class="p-2">{{ .Beta }}°</td>
+                            <td class="p-2 text-indigo-600 font-semibold">{{ .V }}</td>
+                            <td class="p-2 font-semibold">{{ .Q }}</td>
+                            <td class="p-2 text-slate-500">{{ .Pf }}</td>
+                            <td class="p-2 text-slate-500">{{ .Pa }}</td>
+                            <td class="p-2 text-slate-500">{{ .Tf }}</td>
+                            <td class="p-2 font-bold text-rose-700 bg-rose-50/10">{{ .X }}</td>
+                            <td class="p-2 font-bold text-emerald-700 bg-emerald-50/10">{{ .Y }}</td>
+                            <td class="p-2 font-bold text-amber-700 bg-amber-50/10">{{ .Z }}</td>
+                            <td class="p-2 text-slate-600">{{ .Mx }}</td>
+                            <td class="p-2 text-slate-600">{{ .My }}</td>
+                            <td class="p-2 text-slate-600">{{ .Mz }}</td>
+                        </tr>
+                        {{ else }}
+                        <tr>
+                            <td colspan="15" class="p-4 text-center text-slate-400 italic font-sans bg-slate-200/20">
+                                Протокол пуст. Заполните поля выше и внесите первую точку продувки!
+                            </td>
+                        </tr>
+                        {{ end }}
+                    </tbody>
+                </table>
+            </div>
+
+            {{ else }}
+            <p class="text-xs text-slate-400 italic text-center p-4 bg-slate-50 rounded border border-dashed">
+                Выберите протокол в третьем блоке для пошагового заполнения данных продувки
+            </p>
+            {{ end }}
+        </div>
+
+    </div>
+
+</body>
+</html>

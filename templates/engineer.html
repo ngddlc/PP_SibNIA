@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>{{ .RoleTitle }} | СибНИА</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-slate-50 text-slate-800 min-h-screen flex flex-col font-sans">
+
+    <nav class="bg-indigo-900 text-white shadow-md px-6 py-3.5 flex justify-between items-center">
+        <div class="flex items-center gap-3">
+            <span class="text-xl">📊</span>
+            <div>
+                <h1 class="font-bold text-sm md:text-base leading-tight">СибНИА — Информационная система АДТ</h1>
+                <p class="text-xs text-indigo-200 font-medium">{{ .RoleTitle }}</p>
+            </div>
+        </div>
+        <div class="flex items-center gap-4">
+            <span class="text-xs bg-indigo-800 px-2.5 py-1 rounded border border-indigo-700 font-mono text-indigo-100">Доступ: {{ .UserRole }}</span>
+            <a href="/logout" class="text-xs bg-rose-700 hover:bg-rose-600 px-3 py-1.5 rounded font-bold transition">Выйти</a>
+        </div>
+    </nav>
+
+    <div class="p-4 space-y-6 flex-1 max-w-[1600px] mx-auto w-full">
+        
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 items-start">
+            
+            <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200 space-y-3">
+                <div class="flex items-center gap-2 border-b pb-2">
+                    <span class="text-lg text-indigo-700">✈️</span>
+                    <h3 class="font-bold text-slate-700 text-sm uppercase tracking-wide">1. Утверждение моделей ЛА</h3>
+                </div>
+                <form action="{{ if eq .UserRole `Начальник трубы` }}/tunnel_chief{{ else }}/engineer{{ end }}/models/create" method="POST" class="space-y-2 text-xs">
+                    <input type="hidden" name="redirect_path" value="{{ if eq .UserRole `Начальник трубы` }}/tunnel_chief/{{ else }}/engineer/{{ end }}">
+                    <div>
+                        <label class="block text-slate-500 mb-0.5 font-medium">Номер / Шифр модели</label>
+                        <input type="text" name="model_number" required class="w-full p-2 border rounded outline-none focus:border-indigo-500" placeholder="Модель № 04-Т">
+                    </div>
+                    <div>
+                        <label class="block text-slate-500 mb-0.5 font-medium">Кодовое название изделия</label>
+                        <input type="text" name="code_name" required class="w-full p-2 border rounded outline-none focus:border-indigo-500" placeholder="БПЛА 'Сибирь-26'">
+                    </div>
+                    <button type="submit" class="w-full bg-indigo-700 hover:bg-indigo-800 text-white py-2 rounded font-bold transition shadow-sm">
+                        Утвердить кодовое название
+                    </button>
+                </form>
+            </div>
+
+            <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200 space-y-3">
+                <div class="flex items-center gap-2 border-b pb-2">
+                    <span class="text-lg text-emerald-700">📝</span>
+                    <h3 class="font-bold text-slate-700 text-sm uppercase tracking-wide">2. Регистрация эксперимента</h3>
+                </div>
+                <form action="{{ if eq .UserRole `Начальник трубы` }}/tunnel_chief{{ else }}/engineer{{ end }}/experiments/register" method="POST" class="space-y-2 text-xs">
+                    <input type="hidden" name="redirect_path" value="{{ if eq .UserRole `Начальник трубы` }}/tunnel_chief/{{ else }}/engineer/{{ end }}">
+                    
+                    <div class="grid grid-cols-2 gap-2">
+                        <div>
+                            <label class="block text-slate-500 mb-0.5 font-medium">Шифр программы</label>
+                            <input type="text" name="experiment_number" required class="w-full p-1.5 border rounded" placeholder="ЭКСП-2026/4">
+                        </div>
+                        <div>
+                            <label class="block text-slate-500 mb-0.5 font-medium">№ Договора</label>
+                            <input type="text" name="contract_number" required class="w-full p-1.5 border rounded" placeholder="Д-994-01">
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-slate-500 mb-0.5 font-medium">Наименование испытаний</label>
+                        <input type="text" name="experiment_name" required class="w-full p-1.5 border rounded" placeholder="Продувка крыла на закритических углах">
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-2">
+                        <div>
+                            <label class="block text-slate-500 mb-0.5 font-medium">АДТ (Труба)</label>
+                            <select name="wind_tunnel_id" required class="w-full p-1.5 border bg-white rounded">
+                                {{ range .Tunnels }}<option value="{{ .ID }}">{{ .Name }}</option>{{ end }}
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-slate-500 mb-0.5 font-medium">Объект (Модель)</label>
+                            <select name="model_id" required class="w-full p-1.5 border bg-white rounded">
+                                {{ range .AircraftModels }}<option value="{{ .ID }}">{{ .ModelNumber }} ({{ .CodeName }})</option>{{ end }}
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-2">
+                        <div>
+                            <label class="block text-slate-500 mb-0.5 font-medium">Дата начала (план)</label>
+                            <input type="date" name="start_date" required class="w-full p-1.5 border rounded">
+                        </div>
+                        <div>
+                            <label class="block text-slate-500 mb-0.5 font-medium">Дата окончания (план)</label>
+                            <input type="date" name="end_date" class="w-full p-1.5 border rounded">
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-2">
+                        <div>
+                            <label class="block text-slate-500 mb-0.5 font-medium">Начальник трубы</label>
+                            <select name="tunnel_chief_id" required class="w-full p-1.5 border bg-white rounded">
+                                {{ range .Chiefs }}<option value="{{ .ID }}">{{ .LastName }} {{ .FirstName }}</option>{{ end }}
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-slate-500 mb-0.5 font-medium">Ведущий инженер</label>
+                            <select name="lead_engineer_id" required class="w-full p-1.5 border bg-white rounded">
+                                {{ range .Engineers }}<option value="{{ .ID }}">{{ .LastName }} {{ .FirstName }}</option>{{ end }}
+                            </select>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="w-full bg-emerald-700 hover:bg-emerald-800 text-white py-2 rounded font-bold transition shadow-sm pt-2">
+                        Инициировать эксперимент в БД
+                    </button>
+                </form>
+            </div>
+
+            <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200 space-y-3">
+                <div class="flex items-center gap-2 border-b pb-2">
+                    <span class="text-lg text-amber-700">🛠️</span>
+                    <h3 class="font-bold text-slate-700 text-sm uppercase tracking-wide">3. Состав оборудования</h3>
+                </div>
+                <form action="{{ if eq .UserRole `Начальник трубы` }}/tunnel_chief{{ else }}/engineer{{ end }}/equipment/link" method="POST" class="space-y-3 text-xs">
+                    <input type="hidden" name="redirect_path" value="{{ if eq .UserRole `Начальник трубы` }}/tunnel_chief/{{ else }}/engineer/{{ end }}">
+                    <div>
+                        <label class="block text-slate-500 mb-0.5 font-medium">Выберите активный Эксперимент</label>
+                        <select name="experiment_id" required class="w-full p-2 border bg-white rounded">
+                            {{ range .Reports }}<option value="{{ .ID }}">{{ .ExperimentNumber }} — {{ .ExperimentName }}</option>{{ end }}
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-slate-500 mb-0.5 font-medium">Добавить измерительный прибор / датчик (НСИ)</label>
+                        <select name="equipment_id" required class="w-full p-2 border bg-white rounded">
+                            {{ range .Equipment }}<option value="{{ .ID }}">{{ .Name }} [{{ .CodeName }}]</option>{{ end }}
+                        </select>
+                    </div>
+                    <button type="submit" class="w-full bg-amber-600 hover:bg-amber-700 text-white py-2 rounded font-bold transition shadow-sm">
+                        🔗 Включить прибор в состав испытания
+                    </button>
+                </form>
+            </div>
+
+        </div>
+
+        <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+            <div class="bg-slate-100 px-4 py-3 border-b flex justify-between items-center">
+                <h3 class="font-bold text-slate-700 text-xs uppercase tracking-wider flex items-center gap-2">
+                    🖥️ Общий мониторинг плановых сроков и состава испытательных комплексов
+                </h3>
+                <span class="text-xs font-mono text-slate-500 bg-white px-2 py-0.5 rounded border">Всего программ: {{ len .Reports }}</span>
+            </div>
+            
+            <div class="overflow-x-auto">
+                <table class="w-full text-left text-xs border-collapse">
+                    <thead class="bg-slate-50 text-slate-600 border-b uppercase font-bold text-[10px] tracking-wider">
+                        <tr>
+                            <th class="p-3 border-r">Шифр / Договор</th>
+                            <th class="p-3 border-r">Наименование эксперимента</th>
+                            <th class="p-3 border-r">Труба</th>
+                            <th class="p-3 border-r">Модель ЛА (Код)</th>
+                            <th class="p-3 border-r text-center">Дата начала</th>
+                            <th class="p-3 border-r text-center">Дата окончания</th>
+                            <th class="p-3 border-r">Ответственные лица</th>
+                            <th class="p-3">Используемое оборудование (М2М)</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-100 bg-white">
+                        {{ range .Reports }}
+                        <tr class="hover:bg-slate-50/80 transition-colors">
+                            <td class="p-3 border-r font-mono flex flex-col justify-between">
+                                <div>
+                                    <div class="font-bold text-indigo-900">{{ .ExperimentNumber }}</div>
+                                    <div class="text-slate-400 text-[11px]">дог. {{ .ContractNumber }}</div>
+                                </div>
+                                <div class="mt-3">
+                                    <a href="/reports/export?experiment_id={{ .ID }}" class="inline-flex items-center gap-1 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 text-[10px] font-sans font-bold px-2 py-1 rounded border border-emerald-200 transition shadow-2xs">
+                                        📊 Отчет (.xlsx)
+                                    </a>
+                                </div>
+                            </td>
+                            <td class="p-3 border-r font-medium text-slate-900">{{ .ExperimentName }}</td>
+                            <td class="p-3 border-r text-slate-600 font-semibold">{{ .WindTunnel.Name }}</td>
+                            <td class="p-3 border-r">
+                                <span class="bg-slate-100 text-slate-800 px-2 py-0.5 rounded font-mono font-bold">{{ .ModelLA.ModelNumber }}</span>
+                                <div class="text-[11px] text-indigo-600 font-medium italic mt-0.5">Код: {{ .ModelLA.CodeName }}</div>
+                            </td>
+                            <td class="p-3 border-r text-center font-mono font-bold text-emerald-700 bg-emerald-50/30">
+                                {{ .StartDate.Format "02.01.2006" }}
+                            </td>
+                            <td class="p-3 border-r text-center font-mono">
+                                {{ if .EndDate }}
+                                    <span class="font-bold text-rose-700 bg-rose-50/40 px-1.5 py-0.5 rounded">{{ .EndDate.Format "02.01.2006" }}</span>
+                                {{ else }}
+                                    <span class="text-slate-400 italic">Не ограничена</span>
+                                {{ end }}
+                            </td>
+                            <td class="p-3 border-r space-y-0.5 text-[11px]">
+                                <div><span class="text-slate-400">Нач. АДТ:</span> <strong class="text-slate-700">{{ .TunnelChief.LastName }} В.А.</strong></div>
+                                <div><span class="text-slate-400">Вед. инж:</span> <strong class="text-slate-700">{{ .LeadEngineer.LastName }} И.И.</strong></div>
+                            </td>
+                            <td class="p-3">
+                                <div class="flex flex-wrap gap-1">
+                                    {{ range .EquipmentList }}
+                                    <span class="bg-amber-50 text-amber-900 px-2 py-0.5 rounded border border-amber-200 text-[10px] font-medium shadow-2xs">
+                                        🛠️ {{ . }}
+                                    </span>
+                                    {{ else }}
+                                    <span class="text-slate-400 italic text-[11px]">Оборудование не привязано</span>
+                                    {{ end }}
+                                </div>
+                            </td>
+                        </tr>
+                        {{ else }}
+                        <tr>
+                            <td colspan="8" class="p-8 text-center text-slate-400 italic font-sans">
+                                В базе данных СибНИА пока нет зарегистрированных аэродинамических экспериментов. Воспользуйтесь формой инициации выше.
+                            </td>
+                        </tr>
+                        {{ end }}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+    </div>
+
+</body>
+</html>

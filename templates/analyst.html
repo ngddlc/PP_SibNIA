@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Панель Инженера-Аналитика | СибНИА</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-slate-900 text-slate-100 min-h-screen flex flex-col font-sans">
+
+    <nav class="bg-slate-800 border-b border-slate-700 px-6 py-4 flex justify-between items-center shadow-lg">
+        <div class="flex items-center gap-3">
+            <span class="text-2xl">📊</span>
+            <div>
+                <h1 class="font-bold text-base leading-tight">СибНИА • Аналитический Модуль</h1>
+                <p class="text-[11px] text-slate-400">Мониторинг испытаний, аудит данных и отчетность для заказчиков</p>
+            </div>
+        </div>
+        <div class="flex items-center gap-3">
+            <span class="text-xs bg-indigo-500/10 text-indigo-400 px-2.5 py-1 rounded border border-indigo-500/20 font-medium">Режим: Анализ данных</span>
+            <a href="/logout" class="text-xs bg-rose-700/80 hover:bg-rose-600 px-3 py-1.5 rounded transition font-medium">Выйти</a>
+        </div>
+    </nav>
+
+    <main class="p-6 space-y-6 flex-1 max-w-[1600px] w-full mx-auto">
+        
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+			<div class="bg-slate-800 p-4 rounded-xl border border-slate-700 shadow-sm flex items-center justify-between">
+                <div>
+                    <p class="text-xs text-slate-400 font-medium uppercase tracking-wider">Отобрано Протоколов</p>
+                    <h3 class="text-2xl font-bold text-indigo-400 mt-1">{{ .TotalProtocols }} <span class="text-xs font-normal text-slate-400">ед.</span></h3>
+                </div>
+                <span class="text-3xl bg-indigo-500/10 p-2 rounded-lg text-indigo-400">📝</span>
+            </div>
+            <div class="bg-slate-800 p-4 rounded-xl border border-slate-700 shadow-sm flex items-center justify-between">
+                <div>
+                    <p class="text-xs text-slate-400 font-medium uppercase tracking-wider">Всего точек измерения</p>
+                    <h3 class="text-2xl font-bold text-emerald-400 mt-1">{{ .TotalPoints }} <span class="text-xs font-normal text-slate-400">шагов</span></h3>
+                </div>
+                <span class="text-3xl bg-emerald-500/10 p-2 rounded-lg text-emerald-400">🎯</span>
+            </div>
+            <div class="bg-slate-800 p-4 rounded-xl border border-slate-700 shadow-sm flex items-center justify-between">
+                <div>
+                    <p class="text-xs text-slate-400 font-medium uppercase tracking-wider">Охвачено рабочих смен</p>
+                    <h3 class="text-2xl font-bold text-amber-400 mt-1">{{ .TotalShifts }} <span class="text-xs font-normal text-slate-400">смен</span></h3>
+                </div>
+                <span class="text-3xl bg-amber-500/10 p-2 rounded-lg text-amber-400">⏳</span>
+            </div>
+        </div>
+
+        <section class="bg-slate-800 p-4 rounded-xl border border-slate-700 shadow-md">
+            <h2 class="text-xs font-bold uppercase text-slate-400 tracking-wider mb-3 flex items-center gap-2">
+                <span>🔍</span> Фильтры поиска информации
+            </h2>
+            <form method="GET" action="/analyst" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 text-xs">
+                <div>
+                    <label class="block text-slate-400 mb-1">Кодовое имя / Модель</label>
+                    <input type="text" name="model" value="{{ .FilterModel }}" placeholder="Например: МС-21, Крыло-С" class="w-full bg-slate-900 border border-slate-700 p-2 rounded text-slate-100 placeholder-slate-500 outline-none focus:border-indigo-500">
+                </div>
+                <div>
+                    <label class="block text-slate-400 mb-1">Тип/Шифр трубы</label>
+                    <input type="text" name="tunnel" value="{{ .FilterTunnel }}" placeholder="Например: Т-103" class="w-full bg-slate-900 border border-slate-700 p-2 rounded text-slate-100 placeholder-slate-500 outline-none focus:border-indigo-500">
+                </div>
+                <div>
+                    <label class="block text-slate-400 mb-1">Номер контракта / Договора</label>
+                    <input type="text" name="contract" value="{{ .FilterContract }}" placeholder="Например: Д-2026-99" class="w-full bg-slate-900 border border-slate-700 p-2 rounded text-slate-100 placeholder-slate-500 outline-none focus:border-indigo-500">
+                </div>
+                <div>
+                    <label class="block text-slate-400 mb-1">Дата проведения смены</label>
+                    <input type="date" name="date" value="{{ .FilterDate }}" class="w-full bg-slate-900 border border-slate-700 p-2 rounded text-slate-100 outline-none focus:border-indigo-500">
+                </div>
+                <div class="flex items-end gap-2">
+                    <button type="submit" class="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded transition shadow">
+                        Применить
+                    </button>
+                    <a href="/analyst" class="bg-slate-700 hover:bg-slate-600 text-slate-300 py-2 px-3 rounded transition text-center" title="Сбросить все фильтры">
+                        ✕
+                    </a>
+                </div>
+            </form>
+        </section>
+
+        <section class="bg-slate-800 rounded-xl border border-slate-700 shadow-md overflow-hidden">
+            <div class="p-4 border-b border-slate-700 bg-slate-800/50">
+                <h2 class="text-sm font-bold text-slate-300">Сводный реестр протоколов аэродинамических испытаний</h2>
+            </div>
+
+            <div class="overflow-x-auto">
+                <table class="w-full text-left text-xs border-collapse">
+                    <thead class="bg-slate-900/60 text-slate-400 uppercase text-[10px] tracking-wider border-b border-slate-700">
+                        <tr>
+                            <th class="p-3">Дата смены</th>
+                            <th class="p-3">Смена</th>
+                            <th class="p-3">Договор</th>
+                            <th class="p-3">Эксперимент / Модель</th>
+                            <th class="p-3">Конфигурация</th>
+                            <th class="p-3 text-center">Протокол</th>
+                            <th class="p-3">Параметр</th>
+                            <th class="p-3 text-center">Объем (Точек)</th>
+                            <th class="p-3 text-center">Отчетность</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-700/50 bg-slate-800/20">
+                        {{ range .Rows }}
+                        <tr class="hover:bg-slate-700/30 transition-colors">
+                            <td class="p-3 font-mono text-slate-300">{{ .ShiftDate.Format "2006-01-02" }}</td>
+                            <td class="p-3 text-slate-400">№{{ .ShiftNumber }}</td>
+                            <td class="p-3"><span class="bg-slate-900 px-2 py-0.5 rounded text-slate-300 font-mono text-[11px] border border-slate-700">{{ .ContractNumber }}</span></td>
+                            <td class="p-3">
+                                <div class="font-bold text-slate-200">{{ .ExperimentName }}</div>
+                                <div class="text-[10px] text-slate-500 font-mono">Шифр: {{ .ExperimentNumber }}</div>
+                            </td>
+                            <td class="p-3 text-slate-300">{{ .ConfigDescription }} <span class="text-[11px] text-indigo-400 font-mono">({{ .WindSpeed }} м/с)</span></td>
+                            <td class="p-3 text-center font-bold text-amber-400 font-mono">{{ .ProtocolNumber }}</td>
+                            <td class="p-3 text-slate-400 font-sans italic">{{ .VariableParameter }}</td>
+                            <td class="p-3 text-center">
+                                {{ if gt .PointsCount 0 }}
+                                <span class="bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-2.5 py-0.5 rounded-full font-mono font-bold">
+                                    {{ .PointsCount }}
+                                </span>
+                                {{ else }}
+                                <span class="bg-rose-500/10 text-rose-400 border border-rose-500/20 px-2.5 py-0.5 rounded-full font-mono text-[11px]">
+                                    пустой
+                                </span>
+                                {{ end }}
+                            </td>
+                            <td class="p-3 text-center">
+                                <a href="/reports/export?experiment_id={{ .ExperimentID }}" class="bg-emerald-700 hover:bg-emerald-600 text-white font-bold px-2.5 py-1 rounded text-[11px] transition inline-flex items-center gap-1 shadow-sm">
+                                    📥 Excel
+                                </a>
+                            </td>
+                        </tr>
+                        {{ else }}
+                        <tr>
+                            <td colspan="9" class="p-8 text-center text-slate-500 italic bg-slate-900/10">
+                                Информации по заданным фильтрам в базе данных СибНИА не обнаружено.
+                            </td>
+                        </tr>
+                        {{ end }}
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    </main>
+
+</body>
+</html>
