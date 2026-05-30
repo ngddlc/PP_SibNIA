@@ -2,51 +2,63 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <title>АРМ Оператора | СибНИА</title>
+    <title>АРМ Бригадира | СибНИА</title>
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="bg-slate-100 text-slate-800 min-h-screen flex flex-col">
 
-    <nav class="bg-emerald-800 text-white shadow-md px-6 py-3 flex justify-between items-center">
+    <nav class="bg-blue-950 text-white shadow-md px-6 py-3 flex justify-between items-center">
         <div class="font-bold text-lg flex items-center gap-2">
-            СибНИА | Журнал ввода экспериментальных данных
+            <span class="bg-blue-600 text-xs uppercase px-2 py-0.5 rounded font-mono">Бригадир</span>
+            СибНИА | Управление экспериментами и ввод данных
         </div>
-        <a href="/logout" class="text-xs bg-rose-700 hover:bg-rose-600 px-3 py-1.5 rounded transition">Выйти</a>
+        <a href="/logout" class="text-xs bg-blue-800 hover:bg-blue-700 px-3 py-1.5 rounded transition">Выйти</a>
     </nav>
 
     <div class="p-4 grid grid-cols-1 xl:grid-cols-4 gap-4 items-start">
         
         <div class="bg-white p-4 rounded-xl shadow-sm border space-y-4">
-            <h3 class="font-bold text-slate-700 border-b pb-1 text-sm">1. Рабочие смены</h3>
+            <h3 class="font-bold text-slate-700 border-b pb-1 text-sm flex justify-between items-center">
+                <span>1. Рабочие смены</span>
+                {{ if .ActiveShiftID }}<span class="text-[10px] bg-blue-100 text-blue-800 px-1.5 py-0.5 rounded">Есть активная</span>{{ end }}
+            </h3>
             <form action="/brigadier/shifts/create" method="POST" class="space-y-2 bg-slate-50 p-3 rounded border text-xs">
                 <div>
-                    <label class="block text-slate-500">Выберите Эксперимент (Работу)</label>
+                    <label class="block text-slate-500 mb-1">Выберите Эксперимент (Работу)</label>
                     <select name="experiment_id" required class="w-full p-1.5 border rounded bg-white">
                         {{ range .Experiments }}<option value="{{ .ID }}">{{ .ExperimentNumber }} - {{ .ExperimentName }}</option>{{ end }}
                     </select>
                 </div>
                 <div class="grid grid-cols-2 gap-2">
                     <div>
-                        <label class="block text-slate-500">№ Смены</label>
+                        <label class="block text-slate-500 mb-1">№ Смены</label>
                         <input type="number" name="shift_number" required class="w-full p-1.5 border rounded">
                     </div>
                     <div>
-                        <label class="block text-slate-500">Дата</label>
+                        <label class="block text-slate-500 mb-1">Дата</label>
                         <input type="date" name="shift_date" class="w-full p-1.5 border rounded">
                     </div>
                 </div>
                 <div>
-                    <label class="block text-slate-500">Описание работ</label>
+                    <label class="block text-slate-500 mb-1">Описание работ</label>
                     <input type="text" name="work_description" required class="w-full p-1.5 border rounded" placeholder="Продувка на крейсерских режимах">
                 </div>
-                <button type="submit" class="w-full bg-emerald-600 text-white py-1 rounded font-bold">Открыть смену</button>
+                <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white py-1.5 rounded font-bold transition">Открыть смену</button>
             </form>
 
             <div class="space-y-1 max-h-40 overflow-y-auto">
                 {{ range .Shifts }}
-                <a href="/brigadier?shift_id={{ .ID }}" class="block p-2 rounded text-xs border {{ if eq .ID $.ActiveShiftID }}bg-emerald-50 border-emerald-500 font-bold{{ else }}bg-white{{ end }}">
-                    Смена №{{ .ShiftNumber }} (Эксперимент ID: {{ .ExperimentID }})
-                </a>
+                <div class="flex gap-1 items-center">
+                    <a href="/brigadier?shift_id={{ .ID }}" class="flex-1 block p-2 rounded text-xs border {{ if eq .ID $.ActiveShiftID }}bg-blue-50 border-blue-500 font-bold text-blue-950{{ else }}bg-white hover:bg-slate-50{{ end }}">
+                        Смена №{{ .ShiftNumber }} (Эксперимент ID: {{ .ExperimentID }})
+                    </a>
+                    {{ if eq .ID $.ActiveShiftID }}
+                    <form action="/brigadier/shifts/close" method="POST" class="inline">
+                        <input type="hidden" name="shift_id" value="{{ .ID }}">
+                        <button type="submit" title="Закрыть смену" class="p-2 bg-slate-100 hover:bg-slate-200 text-slate-600 border border-slate-300 rounded text-xs">✕</button>
+                    </form>
+                    {{ end }}
+                </div>
                 {{ end }}
             </div>
         </div>
@@ -57,59 +69,59 @@
             <form action="/brigadier/configs/create" method="POST" class="space-y-2 bg-slate-50 p-3 rounded border text-xs">
                 <input type="hidden" name="shift_id" value="{{ .ActiveShiftID }}">
                 <div>
-                    <label class="block text-slate-500">Описание конфигурации</label>
+                    <label class="block text-slate-500 mb-1">Описание конфигурации</label>
                     <input type="text" name="description" required class="w-full p-1.5 border rounded" placeholder="Крыло с выпущенной механизацией">
                 </div>
                 <div class="grid grid-cols-3 gap-1">
                     <div>
-                        <label class="block text-slate-500">V (Скорость)</label>
+                        <label class="block text-slate-500 mb-0.5">V (Скорость)</label>
                         <input type="number" step="0.1" name="wind_speed" required class="w-full p-1 border rounded">
                     </div>
                     <div>
-                        <label class="block text-slate-500">Крен (Roll)</label>
+                        <label class="block text-slate-500 mb-0.5">Крен (Roll)</label>
                         <input type="number" step="0.1" name="roll_angle" required class="w-full p-1 border rounded">
                     </div>
                     <div>
-                        <label class="block text-slate-500">Рыскание(Yaw)</label>
+                        <label class="block text-slate-500 mb-0.5">Рыскание(Yaw)</label>
                         <input type="number" step="0.1" name="yaw_angle" required class="w-full p-1 border rounded">
                     </div>
                 </div>
-                <button type="submit" class="w-full bg-indigo-600 text-white py-1 rounded font-bold">Создать конфиг</button>
+                <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white py-1.5 rounded font-bold transition">Создать конфиг</button>
             </form>
             <div class="space-y-1">
                 {{ range .Configs }}
-                <a href="/brigadier?shift_id={{ $.ActiveShiftID }}&config_id={{ .ID }}" class="block p-2 rounded text-xs border {{ if eq .ID $.ActiveConfigID }}bg-indigo-50 border-indigo-400 font-bold{{ else }}bg-white{{ end }}">
+                <a href="/brigadier?shift_id={{ $.ActiveShiftID }}&config_id={{ .ID }}" class="block p-2 rounded text-xs border {{ if eq .ID $.ActiveConfigID }}bg-blue-50 border-blue-400 font-bold text-blue-950{{ else }}bg-white hover:bg-slate-50{{ end }}">
                     {{ .Description }} (V={{ .WindSpeed }} м/с)
                 </a>
                 {{ end }}
             </div>
-            {{ else }}<p class="text-xs text-slate-400 italic">Сначала выберите смену</p>{{ end }}
+            {{ else }}<p class="text-xs text-slate-400 italic bg-slate-50 p-3 rounded border border-dashed text-center">Сначала выберите смену в блоке 1</p>{{ end }}
         </div>
 
         <div class="bg-white p-4 rounded-xl shadow-sm border space-y-4">
-            <h3 class="font-bold text-slate-700 border-b pb-1 text-sm">3. Протоколы</h3>
+            <h3 class="font-bold text-slate-700 border-b pb-1 text-sm">3. Протоколы продувки</h3>
             {{ if .ActiveConfigID }}
             <form action="/brigadier/protocols/create" method="POST" class="space-y-2 bg-slate-50 p-3 rounded border text-xs">
                 <input type="hidden" name="shift_id" value="{{ .ActiveShiftID }}">
                 <input type="hidden" name="configuration_id" value="{{ .ActiveConfigID }}">
                 <div>
-                    <label class="block text-slate-500">Номер протокола</label>
+                    <label class="block text-slate-500 mb-1">Номер протокола</label>
                     <input type="text" name="protocol_number" required class="w-full p-1.5 border rounded" placeholder="Пр-104/26">
                 </div>
                 <div>
-                    <label class="block text-slate-500">Переменный параметр</label>
+                    <label class="block text-slate-500 mb-1">Переменный параметр</label>
                     <input type="text" name="variable_parameter" required class="w-full p-1.5 border rounded" placeholder="Угол атаки Alpha">
                 </div>
-                <button type="submit" class="w-full bg-amber-600 text-white py-1 rounded font-bold">Создать протокол</button>
+                <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white py-1.5 rounded font-bold transition">Создать протокол</button>
             </form>
             <div class="space-y-1">
                 {{ range .Protocols }}
-                <a href="/brigadier?shift_id={{ $.ActiveShiftID }}&config_id={{ $.ActiveConfigID }}&protocol_id={{ .ID }}" class="block p-2 rounded text-xs border {{ if eq .ID $.ActiveProtocolID }}bg-amber-50 border-amber-400 font-bold{{ else }}bg-white{{ end }}">
+                <a href="/brigadier?shift_id={{ $.ActiveShiftID }}&config_id={{ $.ActiveConfigID }}&protocol_id={{ .ID }}" class="block p-2 rounded text-xs border {{ if eq .ID $.ActiveProtocolID }}bg-blue-50 border-blue-400 font-bold text-blue-950{{ else }}bg-white hover:bg-slate-50{{ end }}">
                     № {{ .ProtocolNumber }} ({{ .VariableParameter }})
                 </a>
                 {{ end }}
             </div>
-            {{ else }}<p class="text-xs text-slate-400 italic">Сначала выберите конфигурацию</p>{{ end }}
+            {{ else }}<p class="text-xs text-slate-400 italic bg-slate-50 p-3 rounded border border-dashed text-center">Сначала выберите конфигурацию</p>{{ end }}
         </div>
 
         <div class="bg-white p-4 rounded-xl shadow-sm border space-y-4 xl:col-span-4">
@@ -138,13 +150,12 @@
                         <label class="text-slate-500 block mb-0.5">Beta (β), °</label>
                         <input type="number" step="0.001" name="beta" required class="w-full p-1 border rounded font-mono">
                     </div>
-
                     <div>
-                        <label class="text-slate-500 block mb-0.5">V (Скорость)</label>
+                        <label class="text-slate-500 block mb-0.5">V (Скорость), м/с</label>
                         <input type="number" step="0.001" name="v" required class="w-full p-1 border rounded font-mono">
                     </div>
                     <div>
-                        <label class="text-slate-500 block mb-0.5">Q (Скор. напор)</label>
+                        <label class="text-slate-500 block mb-0.5">Q (Скор. напор), Па</label>
                         <input type="number" step="0.001" name="q" required class="w-full p-1 border rounded font-mono">
                     </div>
                     <div>
@@ -156,21 +167,21 @@
                         <input type="number" step="0.001" name="pa" class="w-full p-1 border rounded font-mono">
                     </div>
                     <div>
-                        <label class="text-slate-500 block mb-0.5">Температура Tf</label>
+                        <label class="text-slate-500 block mb-0.5">Температура Tf, °C</label>
                         <input type="number" step="0.01" name="tf" class="w-full p-1 border rounded font-mono">
                     </div>
 
                     <div>
-                        <label class="text-slate-600 block mb-0.5 font-semibold text-rose-700">Сила X (Н)</label>
-                        <input type="number" step="0.0001" name="x" required class="w-full p-1 border border-rose-200 rounded font-mono bg-rose-50/30">
+                        <label class="text-blue-900 block mb-0.5 font-semibold">Сила X (Н)</label>
+                        <input type="number" step="0.0001" name="x" required class="w-full p-1 border border-blue-200 rounded font-mono bg-blue-50/30 focus:border-blue-500 focus:outline-none">
                     </div>
                     <div>
-                        <label class="text-slate-600 block mb-0.5 font-semibold text-emerald-700">Сила Y (Н)</label>
-                        <input type="number" step="0.0001" name="y" required class="w-full p-1 border border-emerald-200 rounded font-mono bg-emerald-50/30">
+                        <label class="text-blue-900 block mb-0.5 font-semibold">Сила Y (Н)</label>
+                        <input type="number" step="0.0001" name="y" required class="w-full p-1 border border-blue-200 rounded font-mono bg-blue-50/30 focus:border-blue-500 focus:outline-none">
                     </div>
                     <div>
-                        <label class="text-slate-600 block mb-0.5 font-semibold text-amber-700">Сила Z (Н)</label>
-                        <input type="number" step="0.0001" name="z" required class="w-full p-1 border border-amber-200 rounded font-mono bg-amber-50/30">
+                        <label class="text-blue-900 block mb-0.5 font-semibold">Сила Z (Н)</label>
+                        <input type="number" step="0.0001" name="z" required class="w-full p-1 border border-blue-200 rounded font-mono bg-blue-50/30 focus:border-blue-500 focus:outline-none">
                     </div>
 
                     <div>
@@ -188,13 +199,13 @@
                 </div>
 
                 <div class="flex justify-end pt-1">
-                    <button type="submit" class="bg-emerald-700 text-white px-5 py-2 rounded-md font-bold hover:bg-emerald-800 transition shadow-sm">
+                    <button type="submit" class="bg-blue-700 text-white px-5 py-2 rounded-md font-bold hover:bg-blue-800 transition shadow-sm">
                         ➕ Внести точку в протокол смены
                     </button>
                 </div>
             </form>
 
-            <div class="border rounded-lg overflow-x-auto mt-4 shadow-inner">
+            <div class="border rounded-lg overflow-x-auto mt-4 shadow-inner bg-white">
                 <table class="w-full text-left text-xs font-mono min-w-[1200px]">
                     <thead class="bg-slate-100 text-slate-600 border-b">
                         <tr>
@@ -207,9 +218,9 @@
                             <th class="p-2">Pf</th>
                             <th class="p-2">Pa</th>
                             <th class="p-2">Tf (°C)</th>
-                            <th class="p-2 text-rose-800 bg-rose-50/30">X (Н)</th>
-                            <th class="p-2 text-emerald-800 bg-emerald-50/30">Y (Н)</th>
-                            <th class="p-2 text-amber-800 bg-amber-50/30">Z (Н)</th>
+                            <th class="p-2 text-blue-900 bg-blue-50/40">X (Н)</th>
+                            <th class="p-2 text-blue-900 bg-blue-50/40">Y (Н)</th>
+                            <th class="p-2 text-blue-900 bg-blue-50/40">Z (Н)</th>
                             <th class="p-2">Mx</th>
                             <th class="p-2">My</th>
                             <th class="p-2">Mz</th>
@@ -222,21 +233,21 @@
                             <td class="p-2 text-slate-500">{{ .Al }}</td>
                             <td class="p-2 text-slate-900 font-bold">{{ .Alpha }}°</td>
                             <td class="p-2">{{ .Beta }}°</td>
-                            <td class="p-2 text-indigo-600 font-semibold">{{ .V }}</td>
+                            <td class="p-2 text-blue-600 font-semibold">{{ .V }}</td>
                             <td class="p-2 font-semibold">{{ .Q }}</td>
                             <td class="p-2 text-slate-500">{{ .Pf }}</td>
                             <td class="p-2 text-slate-500">{{ .Pa }}</td>
                             <td class="p-2 text-slate-500">{{ .Tf }}</td>
-                            <td class="p-2 font-bold text-rose-700 bg-rose-50/10">{{ .X }}</td>
-                            <td class="p-2 font-bold text-emerald-700 bg-emerald-50/10">{{ .Y }}</td>
-                            <td class="p-2 font-bold text-amber-700 bg-amber-50/10">{{ .Z }}</td>
+                            <td class="p-2 font-bold text-blue-900 bg-blue-50/10">{{ .X }}</td>
+                            <td class="p-2 font-bold text-blue-900 bg-blue-50/10">{{ .Y }}</td>
+                            <td class="p-2 font-bold text-blue-900 bg-blue-50/10">{{ .Z }}</td>
                             <td class="p-2 text-slate-600">{{ .Mx }}</td>
                             <td class="p-2 text-slate-600">{{ .My }}</td>
                             <td class="p-2 text-slate-600">{{ .Mz }}</td>
                         </tr>
                         {{ else }}
                         <tr>
-                            <td colspan="15" class="p-4 text-center text-slate-400 italic font-sans bg-slate-200/20">
+                            <td colspan="15" class="p-4 text-center text-slate-400 italic font-sans bg-slate-200/10">
                                 Протокол пуст. Заполните поля выше и внесите первую точку продувки!
                             </td>
                         </tr>
@@ -246,8 +257,8 @@
             </div>
 
             {{ else }}
-            <p class="text-xs text-slate-400 italic text-center p-4 bg-slate-50 rounded border border-dashed">
-                Выберите протокол в третьем блоке для пошагового заполнения данных продувки
+            <p class="text-xs text-slate-400 italic text-center p-6 bg-slate-50 rounded-xl border border-dashed">
+                Выберите конкретный протокол в третьем блоке для отображения и пошагового заполнения таблицы весовых измерений.
             </p>
             {{ end }}
         </div>
