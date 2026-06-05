@@ -12,11 +12,11 @@ import (
 	"github.com/xuri/excelize/v2"
 )
 
-// ExportExperimentXLSX - Генерация сводного научно-технического отчета по эксперименту
+// ExportExperimentXLSX - Генерация отчта
 func ExportExperimentXLSX(c *gin.Context) {
 	expID, _ := strconv.Atoi(c.Query("experiment_id"))
 
-	// 1. Выкачиваем полную структуру эксперимента из БД
+	// Выкачиваем полную структуру эксперимента из БД
 	var exp models.Experiment
 	if err := database.DB.Preload("WindTunnel").Preload("ModelLA").Preload("TunnelChief").Preload("LeadEngineer").First(&exp, expID).Error; err != nil {
 		c.String(http.StatusNotFound, "Эксперимент не найден")
@@ -34,13 +34,9 @@ func ExportExperimentXLSX(c *gin.Context) {
 	f := excelize.NewFile()
 	defer f.Close()
 
-	// ==========================================
-	// ЛИСТ 1. ПАСПОРТ ИСПЫТАНИЙ (МЕНЕДЖМЕНТ И ОТК)
-	// ==========================================
 	sheet1 := "Паспорт эксперимента"
 	f.SetSheetName("Sheet1", sheet1)
 
-	// Делаем красивую шапку
 	f.SetCellValue(sheet1, "A1", "СВОДНЫЙ НАУЧНО-ТЕХНИЧЕСКИЙ ОТЧЕТ АЭРОДИНАМИЧЕСКИХ ИСПЫТАНИЙ")
 	f.SetCellValue(sheet1, "A3", "Шифр программы:")
 	f.SetCellValue(sheet1, "B3", exp.ExperimentNumber)
@@ -70,17 +66,12 @@ func ExportExperimentXLSX(c *gin.Context) {
 		f.SetCellValue(sheet1, "B"+strconv.Itoa(12+i), fmt.Sprintf("- %s", eq))
 	}
 
-	// Подгоняем ширину колонок для читаемости
 	f.SetColWidth(sheet1, "A", "A", 30)
 	f.SetColWidth(sheet1, "B", "B", 60)
 
-	// ==========================================
-	// ЛИСТ 2. МАССИВ ТЕХНИЧЕСКИХ ДАННЫХ (ДЛЯ ИНЖЕНЕРОВ)
-	// ==========================================
 	sheet2 := "Данные продувок"
 	f.NewSheet(sheet2)
 
-	// Заголовки таблицы строго по твоей структуре БД (16 колонок)
 	headers := []string{"Номер протокола", "Точка", "al", "Alpha (α)", "Beta (β)", "Q (напор)", "V (скорость)", "Pf", "Pa", "Tf", "Сила X", "Сила Y", "Сила Z", "Момент Mx", "Момент My", "Момент Mz"}
 	for colNum, header := range headers {
 		cell, _ := excelize.CoordinatesToCellName(colNum+1, 1)
@@ -124,15 +115,12 @@ func ExportExperimentXLSX(c *gin.Context) {
 		rowIdx++
 	}
 
-	// Настройка автоширины для второго листа
 	for i := 1; i <= 16; i++ {
 		cell, _ := excelize.CoordinatesToCellName(i, 1)
 		f.SetColWidth(sheet2, cell[:1], cell[:1], 15)
 	}
 
-	// ==========================================
-	// ПЕРЕДАЧА ФАЙЛА В БРАУЗЕР (HTTP СТРИМИНГ)
-	// ==========================================
+	// передача файла в браузер
 	fileName := fmt.Sprintf("SibNIA_Report_Exp_%s_%s.xlsx", exp.ExperimentNumber, time.Now().Format("2006-01-02"))
 
 	c.Header("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")

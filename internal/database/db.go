@@ -26,7 +26,7 @@ func Connect() {
 
 	log.Println("Подключение к PostgreSQL успешно!")
 
-	// Автомиграция ВСЕХ наших таблиц
+	// Автомиграция таблиц
 	DB.AutoMigrate(
 		&models.Role{}, &models.User{},
 		&models.WindTunnel{}, &models.ModelLA{}, &models.Equipment{}, &models.ExperimentType{},

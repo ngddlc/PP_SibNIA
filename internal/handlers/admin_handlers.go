@@ -31,9 +31,9 @@ func isPasswordValid(password string) (bool, string) {
 	return true, ""
 }
 
-// AdminPage - рендер главной панели со всеми справочниками + вывод ошибок
+// AdminPage - рендер главной панели со всеми справочниками
 func AdminPage(c *gin.Context) {
-	// Читаем ошибку из URL, если она была передана при редиректе
+	// Читаем ошибку из URL
 	errMsg := c.Query("error")
 
 	var users []models.User
@@ -57,7 +57,7 @@ func AdminPage(c *gin.Context) {
 		"Tunnels":   tunnels,
 		"ExpTypes":  expTypes,
 		"Equipment": equipment,
-		"Error":     errMsg, // Передаем ошибку в HTML шаблон
+		"Error":     errMsg,
 	})
 }
 
@@ -65,7 +65,7 @@ func AdminPage(c *gin.Context) {
 func UserAdd(c *gin.Context) {
 	password := c.PostForm("password")
 
-	// БЭКЕНД-ВАЛИДАЦИЯ ПАРОЛЯ
+	// валидация пароля
 	if ok, msg := isPasswordValid(password); !ok {
 		c.Redirect(http.StatusFound, "/admin/?error="+msg)
 		return
@@ -107,7 +107,7 @@ func UserEdit(c *gin.Context) {
 
 		newPassword := c.PostForm("password")
 		if newPassword != "" {
-			// БЭКЕНД-ВАЛИДАЦИЯ ПАРОЛЯ ПРИ ИЗМЕНЕНИИ
+
 			if ok, msg := isPasswordValid(newPassword); !ok {
 				c.Redirect(http.StatusFound, "/admin/?error="+msg)
 				return
@@ -153,7 +153,7 @@ func ExpTypeAdd(c *gin.Context) {
 	c.Redirect(http.StatusFound, "/admin/")
 }
 
-// ExpTypeDelete - НОВОЕ: Удаление вида эксперимента
+// ExpTypeDelete - Удаление вида эксперимента
 func ExpTypeDelete(c *gin.Context) {
 	id := c.PostForm("id")
 	database.DB.Delete(&models.ExperimentType{}, id)
@@ -170,7 +170,7 @@ func EquipmentAdd(c *gin.Context) {
 	c.Redirect(http.StatusFound, "/admin/")
 }
 
-// EquipmentDelete - НОВОЕ: Удаление измерительного прибора
+// EquipmentDelete - Удаление измерительного прибора
 func EquipmentDelete(c *gin.Context) {
 	id := c.PostForm("id")
 	database.DB.Delete(&models.Equipment{}, id)

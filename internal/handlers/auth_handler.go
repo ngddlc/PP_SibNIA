@@ -15,24 +15,23 @@ func LoginPost(c *gin.Context) {
 	password := c.PostForm("password")
 
 	var user models.User
-	// 1. Ищем пользователя
+	// Ищем пользователя
 	if err := database.DB.Preload("Role").Where("login = ?", login).First(&user).Error; err != nil {
 		c.HTML(http.StatusUnauthorized, "login.html", gin.H{"error": "Неверный логин или пароль"})
 		return
 	}
 
-	// 2. Проверяем пароль
+	// Проверяем пароль
 	err := bcrypt.CompareHashAndPassword([]byte(user.PasswordHash), []byte(password))
 	if err != nil {
 		c.HTML(http.StatusUnauthorized, "login.html", gin.H{"error": "Неверный логин или пароль"})
 		return
 	}
 
-	// 3. Пишем куки
+	// Пишем куки
 	c.SetCookie("user_id", strconv.Itoa(int(user.ID)), 3600, "/", "", false, true)
 	c.SetCookie("role_name", user.Role.Name, 3600, "/", "", false, true)
 
-	// ИСПРАВЛЕНО: Вместо кучи if-else используем идиоматичный switch
 	switch user.Role.Name {
 	case "Администратор":
 		c.Redirect(http.StatusFound, "/admin/")

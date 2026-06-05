@@ -9,7 +9,7 @@ import (
 // RequireAuth проверяет наличие куки авторизации
 func RequireAuth() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		// Читаем куки "user_id" (в реальном проекте тут будет JWT токен)
+		// Читаем куки
 		userId, err := c.Cookie("user_id")
 		if err != nil || userId == "" {
 			// Если не авторизован - выкидываем на страницу логина

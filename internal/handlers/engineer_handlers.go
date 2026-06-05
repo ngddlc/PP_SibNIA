@@ -18,7 +18,7 @@ type ExperimentReport struct {
 
 // EngineerDashboard - Панель управления для Ведущего инженера и Начальника трубы
 func EngineerDashboard(c *gin.Context) {
-	// 1. Безопасно извлекаем роль (избегаем паники interface conversion)
+
 	var userRoleStr string
 
 	if val, exists := c.Get("user_role"); exists && val != nil {
@@ -27,19 +27,18 @@ func EngineerDashboard(c *gin.Context) {
 		}
 	}
 
-	// Подстраховка: если в контексте пусто, берем роль напрямую из куки браузера
+	// если в контексте пусто, берем роль напрямую из куки браузера
 	if userRoleStr == "" {
 		if cookieRole, err := c.Cookie("role_name"); err == nil && cookieRole != "" {
 			userRoleStr = cookieRole
 		} else {
-			// Дефолтное значение на случай непредвиденного сброса сессии
 			userRoleStr = "Ведущий инженер"
 		}
 	}
 
 	roleTitle := "Панель управления: " + userRoleStr
 
-	// 2. Получаем нормативно-справочную информацию (НСИ) для списков
+	// Получаем нормативно-справочную информацию для списков
 	var tunnels []models.WindTunnel
 	database.DB.Order("name asc").Find(&tunnels)
 
@@ -49,18 +48,18 @@ func EngineerDashboard(c *gin.Context) {
 	var equipment []models.Equipment
 	database.DB.Order("name asc").Find(&equipment)
 
-	// 3. Выбираем персонал для селекторов назначения ответственных
+	// назначения ответственных
 	var chiefs []models.User
 	database.DB.Joins("Role").Where("\"Role\".name = ?", "Начальник трубы").Find(&chiefs)
 
 	var engineers []models.User
 	database.DB.Joins("Role").Where("\"Role\".name = ?", "Ведущий инженер").Find(&engineers)
 
-	// 4. Загружаем список всех экспериментов со всеми внешними связями
+	// Загружаем список всех экспериментов со всеми внешними связями
 	var experiments []models.Experiment
 	database.DB.Preload("WindTunnel").Preload("ModelLA").Preload("TunnelChief").Preload("LeadEngineer").Order("id desc").Find(&experiments)
 
-	// 5. Собираем состав используемого оборудования для каждого эксперимента через Pluck
+	// Собираем состав используемого оборудования для каждого эксперимента
 	var reports []ExperimentReport
 	for _, exp := range experiments {
 		var equipNames []string
@@ -76,7 +75,6 @@ func EngineerDashboard(c *gin.Context) {
 		})
 	}
 
-	// Отправляем собранный пакет данных на единый универсальный HTML-шаблон
 	c.HTML(http.StatusOK, "engineer.html", gin.H{
 		"RoleTitle":      roleTitle,
 		"UserRole":       userRoleStr,
@@ -102,7 +100,7 @@ func ModelLACreate(c *gin.Context) {
 	c.Redirect(http.StatusFound, redirectPath)
 }
 
-// ExperimentRegister - Инициация эксперимента (привязка к договору, трубе и контроль сроков)
+// ExperimentRegister - Инициация эксперимента
 func ExperimentRegister(c *gin.Context) {
 	redirectPath := c.PostForm("redirect_path")
 
@@ -111,7 +109,6 @@ func ExperimentRegister(c *gin.Context) {
 	chiefID, _ := strconv.Atoi(c.PostForm("tunnel_chief_id"))
 	engineerID, _ := strconv.Atoi(c.PostForm("lead_engineer_id"))
 
-	// Парсинг дат временных рамок эксперимента
 	startParsed, _ := time.Parse("2006-01-02", c.PostForm("start_date"))
 
 	var endParsed *time.Time
@@ -137,7 +134,7 @@ func ExperimentRegister(c *gin.Context) {
 	c.Redirect(http.StatusFound, redirectPath)
 }
 
-// ExperimentLinkEquipment - Определение состава используемого оборудования (Many-to-Many)
+// ExperimentLinkEquipment - Определение состава используемого оборудования
 func ExperimentLinkEquipment(c *gin.Context) {
 	redirectPath := c.PostForm("redirect_path")
 	expID, _ := strconv.Atoi(c.PostForm("experiment_id"))

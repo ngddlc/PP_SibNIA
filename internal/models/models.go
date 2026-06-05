@@ -37,7 +37,6 @@ type ModelLA struct {
 	CodeName    string `gorm:"size:100;not null"`
 }
 
-// Силовое исправление для GORM, чтобы он видел твою таблицу model_la
 func (ModelLA) TableName() string { return "models" }
 
 type Equipment struct {
@@ -74,7 +73,6 @@ type Experiment struct {
 
 func (Experiment) TableName() string { return "experiments" }
 
-// Та самая 12-я промежуточная таблица для оборудования в экспериментах
 type ExperimentEquipment struct {
 	ExperimentID uint `gorm:"primaryKey"`
 	EquipmentID  uint `gorm:"primaryKey"`

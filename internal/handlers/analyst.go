@@ -11,7 +11,7 @@ import (
 // AnalyticRow описывает структуру строки сводного реестра для аналитика
 type AnalyticRow struct {
 	ProtocolID        uint      `json:"protocol_id"`
-	ExperimentID      uint      `json:"experiment_id"` // ID эксперимента для точечной выгрузки Excel
+	ExperimentID      uint      `json:"experiment_id"`
 	ProtocolNumber    string    `json:"protocol_number"`
 	VariableParameter string    `json:"variable_parameter"`
 	ConfigDescription string    `json:"config_description"`
@@ -21,12 +21,12 @@ type AnalyticRow struct {
 	ExperimentNumber  string    `json:"experiment_number"`
 	ExperimentName    string    `json:"experiment_name"`
 	ContractNumber    string    `json:"contract_number"`
-	PointsCount       int64     `json:"points_count"` // Количество снятых точек в протоколе
+	PointsCount       int64     `json:"points_count"`
 }
 
 // AnalystDashboard обрабатывает поисковые фильтры и отображает панель аналитика
 func AnalystDashboard(c *gin.Context) {
-	// Получаем параметры фильтрации из URL запроса
+
 	searchModel := c.Query("model")
 	searchTunnel := c.Query("tunnel")
 	searchContract := c.Query("contract")
@@ -34,7 +34,7 @@ func AnalystDashboard(c *gin.Context) {
 
 	var rows []AnalyticRow
 
-	// Формируем базовый SQL-запрос с объединением таблиц (JOIN)
+	// SQL-запрос с объединением таблиц
 	query := database.DB.Table("protocols").
 		Select(`
 			protocols.id as protocol_id, 
@@ -54,7 +54,7 @@ func AnalystDashboard(c *gin.Context) {
 		Joins("JOIN shifts ON shifts.id = configurations.shift_id").
 		Joins("JOIN experiments ON experiments.id = shifts.experiment_id")
 
-	// Применяем фильтры по мере их заполнения инженером-аналитиком
+	// Применяем фильтры по мере их заполнения
 	if searchModel != "" {
 		query = query.Where("experiments.experiment_name ILIKE ?", "%"+searchModel+"%")
 	}
@@ -71,10 +71,9 @@ func AnalystDashboard(c *gin.Context) {
 		}
 	}
 
-	// Сортируем: сначала самые свежие по дате смены и ID протокола
+	// Сортируем
 	query.Order("shifts.shift_date DESC, protocols.id DESC").Scan(&rows)
 
-	// Подсчет агрегированных метрик для карточек KPI
 	var totalProtocols int64 = int64(len(rows))
 	var totalPoints int64 = 0
 	uniqueShifts := make(map[int]bool)
